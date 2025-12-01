@@ -1,188 +1,406 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ABG 判讀練習工具</title>
-<style>
-  body {
-    font-family: 'Noto Sans TC', sans-serif;
-    background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
-    color: #333;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-  .container {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    width: 90%;
-    max-width: 480px;
-    padding: 20px;
-    text-align: center;
-  }
-  h1 {
-    color: #00796b;
-  }
-  .case {
-    margin: 20px 0;
-    font-size: 1.1em;
-    background-color: #e8f5e9;
-    border-radius: 10px;
-    padding: 10px;
-  }
-  .options button {
-    display: block;
-    width: 100%;
-    margin: 8px 0;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    background: #80deea;
-    color: #004d40;
-    font-size: 1em;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-  .options button:hover {
-    background: #4dd0e1;
-  }
-  .result {
-    margin-top: 15px;
-    font-weight: bold;
-  }
-  .explanation {
-    margin-top: 10px;
-    background-color: #fff3e0;
-    border-radius: 10px;
-    padding: 10px;
-  }
-  .next-btn {
-    margin-top: 15px;
-    background: #00796b;
-    color: white;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>呼吸治療 ABG 判讀大挑戰</title>
+    <style>
+        :root {
+            --primary: #00796b; /* 醫療綠 */
+            --light: #e0f2f1;
+            --accent: #d32f2f; /* 警示紅 */
+            --correct: #388e3c;
+            --text: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .progress {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .case-card {
+            background-color: var(--light);
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .case-desc {
+            font-weight: bold;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .abg-values {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+        .value-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        button {
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result-box.correct {
+            background-color: #e8f5e9;
+            border: 1px solid var(--correct);
+            color: var(--correct);
+        }
+        .result-box.wrong {
+            background-color: #ffebee;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        .analysis {
+            margin-top: 15px;
+            color: #333;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .clinical-tip {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+            border-left: 4px solid #ff9800;
+            font-size: 0.9rem;
+        }
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            display: none;
+        }
+        /* Make reference values toggleable */
+        details {
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #555;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🫁 ABG 判讀練習</h1>
-    <div id="caseBox" class="case"></div>
-    <div class="options" id="options"></div>
-    <div id="result" class="result"></div>
-    <div id="explanation" class="explanation"></div>
-    <button class="next-btn" id="nextBtn">下一題 ▶</button>
-  </div>
+
+<div class="container">
+    <h1>🫁 呼吸治療 ABG 判讀</h1>
+    
+    <details>
+        <summary>點此查看參考正常值 (Reference)</summary>
+        <ul style="margin-top:5px; padding-left: 20px;">
+            <li>pH: 7.35 - 7.45</li>
+            <li>PaCO2: 35 - 45 mmHg</li>
+            <li>HCO3-: 22 - 26 mEq/L</li>
+            <li>PaO2: 80 - 100 mmHg</li>
+            <li>BE: -2 to +2</li>
+        </ul>
+    </details>
+
+    <div class="progress" id="progressText">準備開始...</div>
+
+    <div class="case-card">
+        <div class="case-desc" id="caseDesc">載入中...</div>
+        <div class="abg-values" id="abgValues">
+            </div>
+    </div>
+
+    <h3 style="font-size: 1rem; margin-bottom: 10px;">請選擇最準確的判讀：</h3>
+    <div class="options-grid" id="optionsContainer">
+        </div>
+
+    <div class="result-box" id="resultBox">
+        <h3 id="resultTitle"></h3>
+        <div class="analysis" id="resultAnalysis"></div>
+        <div class="clinical-tip" id="clinicalTip"></div>
+    </div>
+
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">下一題 ➡️</button>
+</div>
 
 <script>
-const cases = [
-  {
-    case: "一名 68 歲男性，有 COPD 病史，今天因呼吸困難入院。ABG：pH 7.32、PaCO2 60、HCO3- 30。",
-    answer: "呼吸性酸中毒",
-    explanation: "pH下降代表酸中毒，PaCO2升高為主因，HCO3-輕微上升代表腎臟代償。",
-    management: "可考慮給予氧氣治療與非侵襲性通氣支援，評估CO2潴留與呼吸肌疲乏。"
-  },
-  {
-    case: "45 歲男性，因大量嘔吐來院。ABG：pH 7.52、PaCO2 48、HCO3- 36。",
-    answer: "代謝性鹼中毒",
-    explanation: "pH上升表示鹼中毒，HCO3-升高為主因，PaCO2代償性上升。",
-    management: "需補充電解質（特別是Cl-與K+），評估胃液流失或利尿劑使用。"
-  },
-  {
-    case: "72 歲女性，慢性腎臟病患者，ABG：pH 7.25、PaCO2 36、HCO3- 16。",
-    answer: "代謝性酸中毒",
-    explanation: "pH下降為酸中毒，HCO3-下降為主因，PaCO2代償性下降。",
-    management: "處理代謝性酸中毒原因（如尿毒症、乳酸中毒），可視情況給予NaHCO3。"
-  },
-  {
-    case: "30 歲女性，焦慮過度換氣。ABG：pH 7.55、PaCO2 28、HCO3- 24。",
-    answer: "呼吸性鹼中毒",
-    explanation: "pH上升代表鹼中毒，PaCO2下降為主因，HCO3-正常。",
-    management: "指導放慢呼吸，可使用紙袋呼吸短暫增加CO2。"
-  },
-  {
-    case: "50 歲男性，糖尿病酮酸中毒。ABG：pH 7.10、PaCO2 20、HCO3- 8。",
-    answer: "代謝性酸中毒",
-    explanation: "HCO3-顯著下降導致酸中毒，PaCO2代償下降。",
-    management: "補液、胰島素治療，監測K+，避免快速矯正pH。"
-  },
-  {
-    case: "80 歲男性，COPD急性惡化。ABG：pH 7.20、PaCO2 80、HCO3- 38。",
-    answer: "呼吸性酸中毒",
-    explanation: "PaCO2上升導致酸中毒，HCO3-上升為慢性代償。",
-    management: "非侵襲性通氣支援，避免過度給氧導致CO2潴留。"
-  },
-  {
-    case: "65 歲男性，因腹瀉三天。ABG：pH 7.30、PaCO2 30、HCO3- 15。",
-    answer: "代謝性酸中毒",
-    explanation: "HCO3-流失導致酸中毒，PaCO2下降代償。",
-    management: "補充電解質與液體，矯正酸鹼不平衡。"
-  },
-  {
-    case: "58 歲女性，服用利尿劑後。ABG：pH 7.48、PaCO2 46、HCO3- 34。",
-    answer: "代謝性鹼中毒",
-    explanation: "HCO3-升高導致pH上升，PaCO2上升為代償。",
-    management: "停用利尿劑，補充Cl-與K+。"
-  },
-  {
-    case: "40 歲男性，阿片過量。ABG：pH 7.20、PaCO2 70、HCO3- 25。",
-    answer: "呼吸性酸中毒",
-    explanation: "呼吸抑制導致PaCO2急升，HCO3-尚未代償。",
-    management: "給予Naloxone並監測呼吸功能。"
-  },
-  {
-    case: "32 歲女性，敗血性休克。ABG：pH 7.28、PaCO2 28、HCO3- 14。",
-    answer: "代謝性酸中毒",
-    explanation: "乳酸上升導致酸中毒，PaCO2下降代償。",
-    management: "積極處理感染與補液，支持循環功能。"
-  }
-];
+    // 15個臨床案例資料庫
+    const cases = [
+        {
+            desc: "25歲女性，因過度焦慮被送至急診，主訴手腳發麻、胸悶，呼吸急促 (RR: 28/min)。",
+            ph: "7.52", paco2: "28", hco3: "23", pao2: "105", be: "+1",
+            correct: "呼吸性鹼中毒 (未代償)",
+            analysis: "pH > 7.45 (鹼中毒)，PaCO2 < 35 (呼吸性)，HCO3- 正常 (腎臟尚未代償)。這是典型的急性過度換氣。",
+            tip: "💡 臨床處置：安撫病人情緒，引導放慢呼吸，必要時使用重複呼吸面罩 (Paper bag 目前較少建議，主要以心理支持為主)。排除其他病理原因（如 PE）。"
+        },
+        {
+            desc: "68歲男性，COPD 病史，因意識不清、嗜睡被家屬送醫。未使用居家氧氣。",
+            ph: "7.28", paco2: "65", hco3: "30", pao2: "50", be: "+4",
+            correct: "呼吸性酸中毒 (部分代償)",
+            analysis: "pH < 7.35 (酸中毒)，PaCO2 > 45 (呼吸性累積)，HCO3- > 26 (腎臟試圖保留鹼來代償，但 pH 仍未回正)。",
+            tip: "💡 臨床處置：典型的 Acute on Chronic RF。小心給氧 (Target SpO2 88-92%) 避免抑制呼吸驅動。可能需要 BiPAP 或插管治療。"
+        },
+        {
+            desc: "18歲男性，第一型糖尿病病史，停打胰島素兩天，出現噁心、嘔吐、深快呼吸 (Kussmaul breathing)。",
+            ph: "7.15", paco2: "22", hco3: "8", pao2: "95", be: "-18",
+            correct: "代謝性酸中毒 (部分代償)",
+            analysis: "pH < 7.35 (酸中毒)，HCO3- 極低 (代謝性)，PaCO2 < 35 (肺部過度換氣試圖代償排出 CO2)。",
+            tip: "💡 臨床處置：DKA (糖尿病酮酸中毒)。重點在補充水分 (Hydration)、靜脈輸注胰島素、監測鉀離子 (K+)。"
+        },
+        {
+            desc: "50歲女性，嚴重幽門狹窄導致反覆劇烈嘔吐三天，覺得虛弱無力。",
+            ph: "7.55", paco2: "48", hco3: "40", pao2: "85", be: "+12",
+            correct: "代謝性鹼中毒 (部分代償)",
+            analysis: "pH > 7.45 (鹼中毒)，HCO3- 顯著升高 (代謝性，因嘔吐流失胃酸 H+)，PaCO2 > 45 (肺部減慢呼吸以保留 CO2 代償)。",
+            tip: "💡 臨床處置：補充水分與電解質 (Cl-, K+)。評估是否需要給予 H2 blocker 或解決阻塞問題。"
+        },
+        {
+            desc: "75歲男性，OHCA (到院前心跳停止)，急診 CPR 15分鐘後抽血。",
+            ph: "6.90", paco2: "70", hco3: "10", pao2: "40", be: "-15",
+            correct: "混合性酸中毒 (呼吸性 + 代謝性)",
+            analysis: "pH 極低。PaCO2 高 (通氣不足/呼吸停止) 導致呼酸；HCO3- 低 (組織缺氧無氧代謝產生乳酸) 導致代酸。兩者同時存在。",
+            tip: "💡 臨床處置：高品質 CPR，建立確切呼吸道 (插管) 改善通氣，ROSC 後需低溫療法與循環支持。"
+        },
+        {
+            desc: "40歲男性，嚴重肺炎併發 ARDS，使用呼吸器 (PCV mode)，設定參數較高。",
+            ph: "7.32", paco2: "55", hco3: "27", pao2: "60", be: "+2",
+            correct: "呼吸性酸中毒 (未代償/輕微代償)",
+            analysis: "pH 酸，PaCO2 高。此為 Permissive Hypercapnia (允許性高碳酸血症) 的常見表現，為了保護肺部而限制潮氣容積。",
+            tip: "💡 臨床處置：若是 ARDS 保護肺策略，pH > 7.20-7.25 通常可接受。不需急著調高 MV，專注於改善氧合與治療感染。"
+        },
+        {
+            desc: "30歲女性，去高海拔地區登山 (3500m) 第三天，無明顯不適。",
+            ph: "7.44", paco2: "30", hco3: "20", pao2: "65", be: "-4",
+            correct: "呼吸性鹼中毒 (完全代償)",
+            analysis: "pH 在正常範圍 (7.44 偏鹼)。PaCO2 低 (因缺氧刺激換氣)，HCO3- 低 (腎臟已排出鹼來代償)。",
+            tip: "💡 臨床處置：這是正常的高山適應生理反應 (Chronic Resp Alkalosis)。觀察 SaO2，若無高山症症狀可持續觀察。"
+        },
+        {
+            desc: "55歲男性，慢性腎衰竭 (CKD)，未規律洗腎，呼吸深快。",
+            ph: "7.25", paco2: "30", hco3: "14", pao2: "90", be: "-10",
+            correct: "代謝性酸中毒 (部分代償)",
+            analysis: "pH 酸，HCO3- 低 (腎臟無法排酸/回收鹼)，PaCO2 低 (肺部代償)。",
+            tip: "💡 臨床處置：緊急洗腎 (Hemodialysis) 是矯正酸鹼失衡與電解質異常的最快方法。"
+        },
+        {
+            desc: "22歲男性，海洛因過量 (Heroin overdose)，呼吸每分鐘 6 次。",
+            ph: "7.18", paco2: "75", hco3: "25", pao2: "55", be: "0",
+            correct: "呼吸性酸中毒 (未代償)",
+            analysis: "pH 酸，PaCO2 極高 (呼吸抑制)，HCO3- 正常 (急性發生，腎臟來不及反應)。",
+            tip: "💡 臨床處置：給予解毒劑 Naloxone，給氧，必要時 BVM 給氣或插管保護呼吸道。"
+        },
+        {
+            desc: "60歲女性，敗血性休克 (Septic Shock)，血壓低，乳酸 (Lactate) 8.0 mmol/L。",
+            ph: "7.10", paco2: "25", hco3: "12", pao2: "80", be: "-16",
+            correct: "代謝性酸中毒 (部分代償)",
+            analysis: "pH 低，HCO3- 低 (乳酸堆積消耗 HCO3-)，PaCO2 低 (呼吸代償)。",
+            tip: "💡 臨床處置：Fluid resuscitation (輸液復甦)，使用升壓劑，廣效抗生素，尋找感染源。"
+        },
+        {
+            desc: "45歲男性，健康檢查抽血。",
+            ph: "7.40", paco2: "40", hco3: "24", pao2: "95", be: "0",
+            correct: "正常 ABG",
+            analysis: "所有數值皆在正常範圍內。",
+            tip: "💡 臨床處置：無，繼續保持健康生活！"
+        },
+        {
+            desc: "70歲女性，長期使用利尿劑 (Furosemide) 治療心衰竭。",
+            ph: "7.48", paco2: "46", hco3: "34", pao2: "92", be: "+8",
+            correct: "代謝性鹼中毒 (部分代償/代償中)",
+            analysis: "pH 鹼，HCO3- 高 (利尿劑導致 Cl- 與 H+ 流失，Contraction Alkalosis)。",
+            tip: "💡 臨床處置：調整利尿劑劑量，補充 KCl，監測電解質與心臟功能。"
+        },
+        {
+            desc: "50歲男性，剛做完腹部手術，傷口劇烈疼痛，呼吸淺快。",
+            ph: "7.50", paco2: "31", hco3: "23", pao2: "94", be: "+1",
+            correct: "呼吸性鹼中毒 (未代償)",
+            analysis: "疼痛刺激呼吸中樞導致過度換氣。PaCO2 降低，HCO3- 尚正常。",
+            tip: "💡 臨床處置：給予適當止痛藥物 (Analgesics)，教導使用抱枕咳嗽 (Splinting)，排除術後併發症。"
+        },
+        {
+            desc: "65歲男性，COPD 病史，平日 PaCO2 約 55-60 mmHg，今日回診。",
+            ph: "7.38", paco2: "58", hco3: "33", pao2: "62", be: "+7",
+            correct: "呼吸性酸中毒 (完全代償)",
+            analysis: "pH 正常 (7.38 偏酸)，PaCO2 高，HCO3- 高。這是慢性高碳酸血症的典型表現。",
+            tip: "💡 臨床處置：此為病人 Baseline，不需過度矯正 PaCO2。維持現有治療，鼓勵戒菸與復健。"
+        },
+        {
+            desc: "28歲女性，懷孕 32 週，覺得呼吸稍微費力。",
+            ph: "7.46", paco2: "30", hco3: "20", pao2: "102", be: "-3",
+            correct: "呼吸性鹼中毒 (慢性/代償中 - 孕期生理性)",
+            analysis: "孕期黃體素 (Progesterone) 刺激呼吸中樞，導致生理性過度換氣。通常 pH 稍高或正常偏高。",
+            tip: "💡 臨床處置：孕期正常生理變化 (Physiological Hyperventilation)，通常不需治療，向孕婦衛教解釋即可。"
+        }
+    ];
 
-let currentIndex = 0;
+    // 選項列表
+    const options = [
+        "正常 ABG",
+        "呼吸性酸中毒 (未代償)",
+        "呼吸性酸中毒 (部分代償)",
+        "呼吸性酸中毒 (完全代償)",
+        "呼吸性鹼中毒 (未代償)",
+        "呼吸性鹼中毒 (部分代償)",
+        "呼吸性鹼中毒 (完全代償)",
+        "代謝性酸中毒 (未代償)",
+        "代謝性酸中毒 (部分代償)",
+        "代謝性酸中毒 (完全代償)",
+        "代謝性鹼中毒 (未代償)",
+        "代謝性鹼中毒 (部分代償)",
+        "混合性酸中毒 (呼吸性 + 代謝性)"
+    ];
 
-function showCase() {
-  const c = cases[currentIndex];
-  document.getElementById('caseBox').textContent = c.case;
-  document.getElementById('result').textContent = '';
-  document.getElementById('explanation').textContent = '';
+    let currentCaseIndex = 0;
+    let shuffledCases = [];
 
-  const options = ["代謝性酸中毒", "呼吸性酸中毒", "代謝性鹼中毒", "呼吸性鹼中毒"];
-  const container = document.getElementById('options');
-  container.innerHTML = '';
-  options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.textContent = opt;
-    btn.onclick = () => checkAnswer(opt);
-    container.appendChild(btn);
-  });
-}
+    // 初始化
+    function init() {
+        // 隨機打亂題目順序
+        shuffledCases = [...cases].sort(() => Math.random() - 0.5);
+        loadQuestion();
+    }
 
-function checkAnswer(choice) {
-  const c = cases[currentIndex];
-  const result = document.getElementById('result');
-  const explanation = document.getElementById('explanation');
-  if (choice === c.answer) {
-    result.textContent = '✅ 正確！';
-    result.style.color = '#388e3c';
-  } else {
-    result.textContent = `❌ 錯誤，正確答案是：${c.answer}`;
-    result.style.color = '#d32f2f';
-  }
-  explanation.innerHTML = `<b>解析：</b>${c.explanation}<br><b>臨床提示：</b>${c.management}`;
-}
+    function loadQuestion() {
+        // 重置 UI
+        document.getElementById('resultBox').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('optionsContainer').innerHTML = '';
+        
+        // 檢查是否做完
+        if (currentCaseIndex >= shuffledCases.length) {
+            finishGame();
+            return;
+        }
 
-document.getElementById('nextBtn').addEventListener('click', () => {
-  currentIndex = (currentIndex + 1) % cases.length;
-  showCase();
-});
+        const currentCase = shuffledCases[currentCaseIndex];
+        
+        // 更新進度與題目
+        document.getElementById('progressText').innerText = `Case: ${currentCaseIndex + 1} / ${shuffledCases.length}`;
+        document.getElementById('caseDesc').innerText = currentCase.desc;
+        
+        // 填入 ABG 數值
+        document.getElementById('abgValues').innerHTML = `
+            <div class="value-item"><span>pH:</span> <span>${currentCase.ph}</span></div>
+            <div class="value-item"><span>PaCO2:</span> <span>${currentCase.paco2}</span></div>
+            <div class="value-item"><span>PaO2:</span> <span>${currentCase.pao2}</span></div>
+            <div class="value-item"><span>HCO3-:</span> <span>${currentCase.hco3}</span></div>
+            <div class="value-item"><span>BE:</span> <span>${currentCase.be}</span></div>
+        `;
 
-showCase();
+        // 生成選項按鈕 (打亂順序，但必須包含正確答案)
+        // 為了讓選項不要太多太雜，我們每次取 4-5 個選項，其中必含正確答案
+        let choicePool = options.filter(opt => opt !== currentCase.correct);
+        choicePool = choicePool.sort(() => Math.random() - 0.5).slice(0, 3); // 隨機取3個錯誤選項
+        choicePool.push(currentCase.correct); // 加入正確選項
+        choicePool.sort(() => Math.random() - 0.5); // 再次打亂
+
+        const optionsHtml = choicePool.map(opt => 
+            `<button onclick="checkAnswer(this, '${opt}')">${opt}</button>`
+        ).join('');
+        
+        document.getElementById('optionsContainer').innerHTML = optionsHtml;
+    }
+
+    function checkAnswer(btn, selectedOption) {
+        // 鎖定所有按鈕
+        const buttons = document.querySelectorAll('#optionsContainer button');
+        buttons.forEach(b => b.disabled = true);
+
+        const currentCase = shuffledCases[currentCaseIndex];
+        const resultBox = document.getElementById('resultBox');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultAnalysis = document.getElementById('resultAnalysis');
+        const clinicalTip = document.getElementById('clinicalTip');
+
+        // 標記選擇的按鈕
+        btn.classList.add('selected');
+
+        resultBox.style.display = 'block';
+        
+        if (selectedOption === currentCase.correct) {
+            resultBox.className = 'result-box correct';
+            resultTitle.innerText = "✅ 答對了！";
+        } else {
+            resultBox.className = 'result-box wrong';
+            resultTitle.innerText = `❌ 答錯了... 正解是：${currentCase.correct}`;
+        }
+
+        resultAnalysis.innerHTML = `<strong>解析：</strong>${currentCase.analysis}`;
+        clinicalTip.innerText = currentCase.tip;
+
+        document.getElementById('nextBtn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentCaseIndex++;
+        loadQuestion();
+    }
+
+    function finishGame() {
+        document.querySelector('.container').innerHTML = `
+            <h1>🎉 練習結束！</h1>
+            <p style="text-align:center; margin: 20px 0;">您已經完成了所有隨機案例練習。</p>
+            <button class="next-btn" style="display:block" onclick="location.reload()">重新挑戰 🔄</button>
+        `;
+    }
+
+    // 啟動
+    init();
+
 </script>
+
 </body>
 </html>
-
